@@ -1,14 +1,17 @@
-# Ignore most of source code
-src/*
-!src/specs   # keep specs for codegen
-
-node_modules/
+# TypeScript source files (not needed in npm package)
+src/
 *.ts
 *.tsx
 *.spec.ts
 *.spec.tsx
-*.log
 
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+yarn-debug.log*
+
+# IDE / OS files
 .vscode/
 .idea/
 .DS_Store
@@ -16,12 +19,7 @@ node_modules/
 *.swp
 *.swo
 *.bak
-npm-debug.log*
-yarn-error.log*
-yarn-debug.log*
 
-.git/
-.gitignore
-
+# Local environment configs
 .env
 .env.*
