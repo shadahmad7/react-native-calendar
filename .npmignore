@@ -1,13 +1,10 @@
-# Ignore source maps and TS build outputs
-src/
 node_modules/
+src/
 *.ts
 *.tsx
-*.log
 *.spec.ts
 *.spec.tsx
-
-# Ignore development and config files
+*.log
 .vscode/
 .idea/
 .DS_Store
@@ -18,11 +15,7 @@ node_modules/
 npm-debug.log*
 yarn-error.log*
 yarn-debug.log*
-
-# Ignore Git files
 .git/
 .gitignore
-
-# Ignore local configs
 .env
 .env.*
