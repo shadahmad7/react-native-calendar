@@ -1,10 +1,14 @@
+# Ignore most of source code
+src/*
+!src/specs   # keep specs for codegen
+
 node_modules/
-src/
 *.ts
 *.tsx
 *.spec.ts
 *.spec.tsx
 *.log
+
 .vscode/
 .idea/
 .DS_Store
@@ -15,7 +19,9 @@ src/
 npm-debug.log*
 yarn-error.log*
 yarn-debug.log*
+
 .git/
 .gitignore
+
 .env
 .env.*
