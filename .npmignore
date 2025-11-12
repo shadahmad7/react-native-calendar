@@ -1,0 +1,28 @@
+# Ignore source maps and TS build outputs
+src/
+node_modules/
+*.ts
+*.tsx
+*.log
+*.spec.ts
+*.spec.tsx
+
+# Ignore development and config files
+.vscode/
+.idea/
+.DS_Store
+*.iml
+*.swp
+*.swo
+*.bak
+npm-debug.log*
+yarn-error.log*
+yarn-debug.log*
+
+# Ignore Git files
+.git/
+.gitignore
+
+# Ignore local configs
+.env
+.env.*

@@ -1,0 +1,55 @@
+{
+  "name": "@shadahmad7/react-native-calendar",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "react-native": "dist/index.js",
+  "description": "React Native Calendar TurboModule for iOS and Android. This library provides a fully native calendar module for React Native CLI apps, migrated from Expo Calendar, allowing direct access to device calendars, events, and reminders without requiring Expo. Supports creating, updating, deleting, and fetching events with proper timezone handling for both Android and iOS.",
+  "license": "MIT",
+  "author": "Shad Ahmad",
+  "homepage": "https://github.com/shadahmad7/react-native-calendar#readme",
+  "bugs": {
+    "url": "https://github.com/shadahmad7/react-native-calendar/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shadahmad7/react-native-calendar.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "react-native",
+    "react-native-module",
+    "calendar",
+    "date-picker",
+    "turbomodule",
+    "android",
+    "ios",
+    "typescript",
+    "shadahmad7"
+  ],
+  "codegenConfig": {
+    "name": "RNReactNativeCalendarSpec",
+    "type": "modules",
+    "jsSrcsDir": "src/specs",
+    "android": {
+      "javaPackageName": "com.shadahmad7.reactnativecalendar"
+    },
+    "ios": {
+      "libraryName": "ReactNativeCalendar",
+      "podspecPath": "react-native-calendar.podspec"
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.3",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-native": ">=0.73.0"
+  }
+}
