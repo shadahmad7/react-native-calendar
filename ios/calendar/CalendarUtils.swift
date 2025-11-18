@@ -13,7 +13,65 @@ struct CalendarUtils {
         formatter.timeZone = TimeZone.current
         return formatter
     }()
+
+    // ISO8601 formatter WITH fractional seconds for EventKit round-trip
+    static let isoFormatterWithFractional: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
 }
+
+
+ 
+
+// MARK: - Date Parsing (new helpers)
+
+// Strict parser for the millis you will always send from JS.
+// Accepts:
+//  - millis as String -> "1763713800000"
+//  - millis as NSNumber/Double/Int
+// Returns Date? (no fallbacks)
+func parseMillis(_ raw: Any?) -> Date? {
+    guard let raw = raw else { return nil }
+
+    // If it's already a String containing millis
+    if let s = raw as? String, let ms = Double(s) {
+        return Date(timeIntervalSince1970: ms / 1000.0)
+    }
+
+    // If it's a numeric type
+    if let n = raw as? NSNumber {
+        return Date(timeIntervalSince1970: n.doubleValue / 1000.0)
+    }
+    if let d = raw as? Double {
+        return Date(timeIntervalSince1970: d / 1000.0)
+    }
+    if let i = raw as? Int {
+        return Date(timeIntervalSince1970: Double(i) / 1000.0)
+    }
+
+    // No fallback
+    return nil
+}
+
+// Convert a Date to ISO8601 string with fractional seconds (EventKit-safe)
+func isoString(from date: Date) -> String {
+    return CalendarUtils.isoFormatterWithFractional.string(from: date)
+}
+
+// Parse ISO string (with fractional seconds preferred)
+func parseISO(_ str: String) -> Date? {
+    if let d = CalendarUtils.isoFormatterWithFractional.date(from: str) {
+        return d
+    }
+    // fallback to ISO without fractional seconds
+    let iso2 = ISO8601DateFormatter()
+    iso2.formatOptions = [.withInternetDateTime]
+    return iso2.date(from: str)
+}
+
+
 
 // MARK: - Date Parsing
 

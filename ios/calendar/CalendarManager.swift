@@ -148,48 +148,59 @@ public class CalendarManager: NSObject {
 
 
   @objc
-  func saveEventAsync(_ event: NSDictionary,
-                      resolver resolve: @escaping RCTPromiseResolveBlock,
-                      rejecter reject: @escaping RCTPromiseRejectBlock) {
+    func saveEventAsync(_ event: NSDictionary,
+                        resolver resolve: @escaping RCTPromiseResolveBlock,
+                        rejecter reject: @escaping RCTPromiseRejectBlock) {
 
-      DispatchQueue.main.async {
-          guard let topVC = UIApplication.shared.windows.first(where: { $0.isKeyWindow })?.rootViewController else {
-              reject("NO_VIEW_CONTROLLER", DefaultCalendarNotFoundException().reason, nil)
-              return
-          }
+        DispatchQueue.main.async {
+            guard let topVC = UIApplication.shared.windows.first(where: { $0.isKeyWindow })?.rootViewController else {
+                reject("NO_VIEW_CONTROLLER", DefaultCalendarNotFoundException().reason, nil)
+                return
+            }
 
-          let eventDetails = event as? [String: Any] ?? [:]
+            let eventDetails = event as? [String: Any] ?? [:]
 
-          // Required title
-          guard let title = eventDetails["title"] as? String, !title.isEmpty else {
-              reject("MISSING_TITLE", MissingParameterException().reason, nil)
-              return
-          }
+            // Required title
+            guard let title = eventDetails["title"] as? String, !title.isEmpty else {
+                reject("MISSING_TITLE", MissingParameterException().reason, nil)
+                return
+            }
 
-          // Optional startDate and endDate
-          let startDate = parse(date: eventDetails["startDate"]) ?? Date()
-          let endDate = parse(date: eventDetails["endDate"]) ?? Date().addingTimeInterval(3600)
+            // ---- STRICT parsing: we expect millis from the frontend ----
+            guard let startDate = parseMillis(eventDetails["startDate"]) else {
+                reject("INVALID_START_DATE", "startDate must be milliseconds (string or number).", nil)
+                return
+            }
 
-          // Overwrite eventDetails with parsed dates
-          var finalEventDetails = eventDetails
-          finalEventDetails["startDate"] = CalendarUtils.dateFormatter.string(from: startDate)
-          finalEventDetails["endDate"] = CalendarUtils.dateFormatter.string(from: endDate)
+            guard let endDate = parseMillis(eventDetails["endDate"]) else {
+                reject("INVALID_END_DATE", "endDate must be milliseconds (string or number).", nil)
+                return
+            }
 
-          let vc = EditEventViewController(
-              eventDetails: finalEventDetails,
-              resolve: resolve,
-              reject: reject,
-              onDismiss: {
-                  print("Event dialog dismissed")
-              }
-          )
+            // NOTE: Per your request, do NOT auto-correct end < start or fallback to now.
+            // We will accept the exact values you provide (even if end <= start).
 
-          vc.modalPresentationStyle = .formSheet
-          topVC.present(vc, animated: true) {
-              print("Event dialog presented successfully")
-          }
-      }
-  }
+            // Convert to ISO8601 (EventKit-compatible) strings
+            var finalEventDetails = eventDetails
+            finalEventDetails["startDate"] = isoString(from: startDate)
+            finalEventDetails["endDate"] = isoString(from: endDate)
+
+            let vc = EditEventViewController(
+                eventDetails: finalEventDetails,
+                resolve: resolve,
+                reject: reject,
+                onDismiss: {
+                    print("Event dialog dismissed")
+                }
+            )
+
+            vc.modalPresentationStyle = .formSheet
+            topVC.present(vc, animated: true) {
+                print("Event dialog presented successfully")
+            }
+        }
+    }
+
 
 
   @objc

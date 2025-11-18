@@ -1,6 +1,6 @@
 {
   "name": "@shadahmad7/react-native-calendar",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",

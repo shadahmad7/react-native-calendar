@@ -38,23 +38,31 @@ class EditEventViewController: EKEventEditViewController, EKEventEditViewDelegat
         event.location = details["location"] as? String
         event.notes = details["notes"] as? String
 
-        let formatter = ISO8601DateFormatter()
-
+        // Use the same ISO formatter we produced in CalendarManager
         if let startStr = details["startDate"] as? String,
-           let startDate = formatter.date(from: startStr) {
+        let startDate = parseISO(startStr) {
             event.startDate = startDate
+        } else {
+            // If no valid start string, we intentionally leave event.startDate nil.
+            // However, because saveEventAsync guarantees startDate and endDate,
+            // and we strictly converted to ISO there, this should not happen.
         }
 
         if let endStr = details["endDate"] as? String,
-           let endDate = formatter.date(from: endStr) {
+        let endDate = parseISO(endStr) {
             event.endDate = endDate
+        } else {
+            // same note as above
         }
 
         if let allDay = details["allDay"] as? Bool {
             event.isAllDay = allDay
         }
 
+        // safe fallback for calendar — prefer default, otherwise first available
         event.calendar = eventStoreInstance.defaultCalendarForNewEvents
+            ?? eventStoreInstance.calendars(for: .event).first
+
         return event
     }
 
