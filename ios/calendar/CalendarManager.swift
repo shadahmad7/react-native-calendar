@@ -27,20 +27,34 @@ public class CalendarManager: NSObject {
     return ["version": "1.0.0"]
   }
 
-  // MARK: - Permissions
-  @objc
-    func requestCalendarPermissionsAsync(_ resolve: @escaping RCTPromiseResolveBlock,
-                                        rejecter reject: @escaping RCTPromiseRejectBlock) {
+    // MARK: - Permissions
+    @objc
+    func requestCalendarPermissionsAsync(
+        _ resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock
+    ) {
         let requester = CalendarPermissionsRequester(eventStore: eventStore)
+
         requester.requestPermissions { status in
-            if status == "granted" {
-                resolve(["granted": true])
-            } else {
-                let exception = MissionPermissionsException("Calendar")
-                reject("PERMISSION_DENIED", exception.reason, nil)
+            switch status {
+            case "granted":
+                resolve(["status": "granted", "granted": true])
+
+            case "denied":
+                // DO NOT reject — return a normal response
+                resolve(["status": "denied", "granted": false])
+
+            case "undetermined":
+                resolve(["status": "undetermined", "granted": false])
+
+            default:
+                // unknown fallback
+                resolve(["status": "unknown", "granted": false])
             }
         }
     }
+
+
 
     @objc
     func requestRemindersPermissionsAsync(_ resolve: @escaping RCTPromiseResolveBlock,

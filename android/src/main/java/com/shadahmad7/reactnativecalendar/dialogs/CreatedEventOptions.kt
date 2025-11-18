@@ -5,6 +5,7 @@ import java.io.Serializable
 data class CreatedEventOptions(
     val title: String? = null,
     val location: String? = null,
+    val url: String? = null,
     val notes: String? = null,
     val timeZone: String? = null,
     val availability: String? = null,

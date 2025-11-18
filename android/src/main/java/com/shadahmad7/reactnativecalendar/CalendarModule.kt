@@ -45,46 +45,69 @@ class CalendarModule(private val context: Context) {
     }
 
     // ------------------- Permissions -------------------
+    private var permissionPromise: Promise? = null
+
+    private val permissionListener = PermissionListener { requestCode, permissions, grantResults ->
+        if (requestCode != 1234) return@PermissionListener false
+
+        var allGranted = true
+        for (result in grantResults) {
+            if (result != PackageManager.PERMISSION_GRANTED) {
+                allGranted = false
+            }
+        }
+
+        val status = if (allGranted) "granted" else "denied"
+
+        val map = Arguments.createMap()
+        map.putBoolean("granted", allGranted)
+        map.putString("status", status)
+
+        permissionPromise?.resolve(map)
+        permissionPromise = null
+
+        true
+    }
+
     fun requestCalendarPermissionsAsync(promise: Promise) {
         try {
-            Log.d("Calendar", "requestCalendarPermissionsAsync called")
+            val readGranted = ContextCompat.checkSelfPermission(
+                context, Manifest.permission.READ_CALENDAR
+            ) == PackageManager.PERMISSION_GRANTED
 
-            val readGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED
-            val writeGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_CALENDAR) == PackageManager.PERMISSION_GRANTED
+            val writeGranted = ContextCompat.checkSelfPermission(
+                context, Manifest.permission.WRITE_CALENDAR
+            ) == PackageManager.PERMISSION_GRANTED
 
+            // Already granted
             if (readGranted && writeGranted) {
-                Log.d("Calendar", "Already granted")
-                val result = Arguments.createMap()
-                result.putBoolean("granted", true)
-                promise.resolve(result)
+                val map = Arguments.createMap()
+                map.putBoolean("granted", true)
+                map.putString("status", "granted")
+                promise.resolve(map)
                 return
             }
 
-            val currentActivity = (context as ReactApplicationContext).currentActivity
-            if (currentActivity == null) {
-                Log.e("Calendar", "No current activity available to request permissions")
-                promise.reject("NO_ACTIVITY", "Cannot request permissions without an activity")
+            val activity = (context as ReactApplicationContext).currentActivity
+            if (activity == null) {
+                promise.reject("NO_ACTIVITY", "Cannot request permissions without activity")
                 return
             }
 
-            Log.d("Calendar", "Requesting calendar permissions")
+            // Save to resolve later
+            permissionPromise = promise
 
-            ActivityCompat.requestPermissions(
-                currentActivity,
+            // Activity must implement PermissionAwareActivity
+            (activity as PermissionAwareActivity).requestPermissions(
                 arrayOf(
                     Manifest.permission.READ_CALENDAR,
                     Manifest.permission.WRITE_CALENDAR
                 ),
-                1234 // requestCode
+                1234,
+                permissionListener
             )
 
-            // Note: You can't directly resolve the promise here.
-            // The result comes asynchronously via onRequestPermissionsResult.
-            val result = Arguments.createMap()
-            result.putBoolean("granted", false)
-            promise.resolve(result) // Temporarily returning false
         } catch (e: Exception) {
-            Log.e("Calendar", "Error in requestCalendarPermissionsAsync", e)
             promise.reject("PERMISSION_REQUEST_ERROR", e)
         }
     }
@@ -92,20 +115,28 @@ class CalendarModule(private val context: Context) {
 
     fun getCalendarPermissionsAsync(promise: Promise) {
         try {
-            Log.d("Calendar", "getCalendarPermissionsAsync called")
+            val readGranted = ContextCompat.checkSelfPermission(
+                context, Manifest.permission.READ_CALENDAR
+            ) == PackageManager.PERMISSION_GRANTED
 
-            val readGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED
-            val writeGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_CALENDAR) == PackageManager.PERMISSION_GRANTED
-
-            Log.d("Calendar", "READ_CALENDAR granted: $readGranted")
-            Log.d("Calendar", "WRITE_CALENDAR granted: $writeGranted")
+            val writeGranted = ContextCompat.checkSelfPermission(
+                context, Manifest.permission.WRITE_CALENDAR
+            ) == PackageManager.PERMISSION_GRANTED
 
             val granted = readGranted && writeGranted
-            Log.d("Calendar", "Final permission status (read && write): $granted")
 
-            promise.resolve(mapOf("granted" to granted))
+            val status = when {
+                granted -> "granted"
+                !readGranted || !writeGranted -> "denied"
+                else -> "undetermined"
+            }
+
+            val map = Arguments.createMap()
+            map.putBoolean("granted", granted)
+            map.putString("status", status)
+
+            promise.resolve(map)
         } catch (e: Exception) {
-            Log.e("Calendar", "Error in getCalendarPermissionsAsync", e)
             promise.reject("PERMISSION_GET_ERROR", e)
         }
     }
@@ -210,6 +241,7 @@ class CalendarModule(private val context: Context) {
                 title = details["title"] as? String,
                 notes = details["notes"] as? String,
                 location = details["location"] as? String,
+                url = details["url"] as? String,
                 allDay = details["allDay"] as? Boolean,
                 startDate = details["startDate"] as? String,
                 endDate = details["endDate"] as? String,

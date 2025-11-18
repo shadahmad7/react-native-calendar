@@ -20,6 +20,10 @@ class CreateEventContract {
             input.location?.let { putExtra(CalendarContract.Events.EVENT_LOCATION, it) }
             input.allDay?.let { putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, it) }
 
+            input.url?.let { 
+                putExtra(CalendarContract.Events.CUSTOM_APP_URI, it) 
+            }
+
             // **Send milliseconds directly**
             input.startDate?.let { putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, it.toLong()) }
             input.endDate?.let { putExtra(CalendarContract.EXTRA_EVENT_END_TIME, it.toLong()) }

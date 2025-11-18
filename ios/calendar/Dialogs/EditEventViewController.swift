@@ -81,6 +81,7 @@ class EditEventViewController: EKEventEditViewController, EKEventEditViewDelegat
                 "title": event.title ?? "",
                 "startDate": event.startDate?.description ?? "",
                 "location": event.location ?? "",      
+                "url": event.url ?? "",      
                 "allDay": event.isAllDay,  
                 "endDate": event.endDate?.description ?? "",
                 "status": eventStatusToString(event.status),

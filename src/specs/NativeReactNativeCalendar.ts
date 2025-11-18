@@ -24,8 +24,11 @@ import { TurboModule, TurboModuleRegistry } from 'react-native';
 // Define the shapes of data returned or passed to the native module
 //
 export interface CalendarPermissionResult {
-  /** true if permission granted, false otherwise */
+  /** true if permission granted */
   granted: boolean;
+
+  /** "granted" | "denied" | "undetermined" */
+  status: "granted" | "denied" | "undetermined";
 }
 
 export interface CalendarEvent {
@@ -46,6 +49,9 @@ export interface CalendarEvent {
 
   /** Optional location for the event (e.g., "Conference Room") */
   location?: string;
+
+  /** Optional url for the event (e.g., "http://example.com") */
+  url?: string;
 
   /** Optional flag to indicate if this is an all-day event */
   allDay?: boolean;

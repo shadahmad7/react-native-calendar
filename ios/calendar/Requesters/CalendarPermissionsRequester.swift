@@ -10,57 +10,83 @@ public class CalendarPermissionsRequester: NSObject {
         self.eventStore = eventStore
     }
 
-    // Check current calendar permission status
+    // MARK: - Get Current Permission Status
     public func getPermissions() -> String {
-        let descriptionKey: String
-        if #available(iOS 17.0, *) {
-            descriptionKey = "NSCalendarsFullAccessUsageDescription"
-        } else {
-            descriptionKey = "NSCalendarsUsageDescription"
+        // Correct Info.plist Keys for each OS version
+        let descriptionKey: String = {
+            if #available(iOS 17.0, *) {
+                return "NSCalendarsFullAccessUsageDescription"
+            } else {
+                return "NSCalendarsUsageDescription"
+            }
+        }()
+
+        // DO NOT crash the app — return denied if missing
+        if Bundle.main.object(forInfoDictionaryKey: descriptionKey) == nil {
+            print("⚠️ Missing \(descriptionKey) in Info.plist")
+            return "denied"
         }
 
-        guard Bundle.main.object(forInfoDictionaryKey: descriptionKey) != nil else {
-            fatalError("Missing \(descriptionKey) in Info.plist")
-        }
+        // Determine the status properly
+        let status = EKEventStore.authorizationStatus(for: .event)
 
         if #available(iOS 17.0, *) {
-            let status = EKEventStore.authorizationStatus(for: .event)
             switch status {
-            case .notDetermined: return "undetermined"
-            case .restricted, .denied, .writeOnly: return "denied"
-            case .fullAccess: return "granted"
-            @unknown default: return "undetermined"
+            case .notDetermined:
+                return "undetermined"
+            case .restricted, .denied, .writeOnly:
+                return "denied"
+            case .fullAccess:
+                return "granted"
+            @unknown default:
+                return "undetermined"
             }
         } else {
-            let status = EKEventStore.authorizationStatus(for: .event)
             switch status {
-            case .notDetermined: return "undetermined"
-            case .restricted, .denied: return "denied"
-            case .authorized: return "granted"
-            @unknown default: return "undetermined"
+            case .notDetermined:
+                return "undetermined"
+            case .restricted, .denied:
+                return "denied"
+            case .authorized:
+                return "granted"
+            @unknown default:
+                return "undetermined"
             }
         }
     }
 
-    // Request calendar permissions
+    // MARK: - Request Permissions
     public func requestPermissions(completion: @escaping (String) -> Void) {
+
+        // If already determined, return immediately
+        let currentStatus = getPermissions()
+        if currentStatus != "undetermined" {
+            completion(currentStatus)
+            return
+        }
+
+        // iOS 17+ uses requestFullAccessToEvents
         if #available(iOS 17.0, *) {
-            eventStore.requestFullAccessToEvents { _, error in
+            eventStore.requestFullAccessToEvents { granted, error in
                 if let error = error {
                     print("Calendar permission error: \(error.localizedDescription)")
                     completion("denied")
-                } else {
-                    completion(self.getPermissions())
+                    return
                 }
+
+                completion(granted ? "granted" : "denied")
             }
+
+        // < iOS 17 uses requestAccess(to:)
         } else {
-            eventStore.requestAccess(to: .event) { _, error in
+            eventStore.requestAccess(to: .event) { granted, error in
                 if let error = error {
                     print("Calendar permission error: \(error.localizedDescription)")
                     completion("denied")
-                } else {
-                    completion(self.getPermissions())
+                    return
                 }
+
+                completion(granted ? "granted" : "denied")
             }
         }
     }
