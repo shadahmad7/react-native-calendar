@@ -227,8 +227,18 @@ class CalendarModule(private val context: Context) {
                 ?: run {
                     Log.w("Calendar", "calendarId not provided, selecting default calendar")
                     val calendars = getCalendars()
+                    // If no calendars found, try to open native calendar app
                     if (calendars.isEmpty()) {
-                        throw Exception("No calendar found on device — cannot open create event dialog")
+                        Log.w("Calendar", "No calendar found — trying to open native calendar app")
+
+                        val launched = CalendarUtils.tryOpenCalendarApp(context)
+
+                        if (!launched) {
+                            throw Exception("No calendar found on device — cannot open create event dialog")
+                        }
+
+                        // Stop execution here because user will come back after login/setup
+                        return
                     }
                     val defaultCalendar = calendars[0]
                     defaultCalendar.getLong(CalendarContract.Calendars._ID).toInt()

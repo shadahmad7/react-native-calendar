@@ -7,6 +7,10 @@ import com.facebook.react.bridge.WritableNativeMap
 import java.text.SimpleDateFormat
 import java.util.Locale // ✅ Missing import for Locale
 import com.shadahmad7.reactnativecalendar.CalendarEventBuilder // ✅ Missing import for CalendarEventBuilder
+import android.content.Intent
+import android.util.Log
+import android.net.Uri
+import android.content.Context
 
 object CalendarUtils {
 
@@ -138,6 +142,20 @@ object CalendarUtils {
                 if (parsed != null) builder.put(field, parsed.time)
             }
             is Number -> builder.put(field, date.toLong())
+        }
+    }
+
+    fun tryOpenCalendarApp(context: Context): Boolean {
+        return try {
+            val intent = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_APP_CALENDAR)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+            true
+        } catch (e: Exception) {
+            Log.e("Calendar", "Failed to open Calendar app", e)
+            false
         }
     }
 }
